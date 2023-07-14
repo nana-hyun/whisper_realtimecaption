@@ -1,6 +1,38 @@
 # whisper_real time caption with chat_GPT
 2023 데이터분석경진대회 
 
+---
+* install package
+
+(pip or pip3)
+
+pip install torch
+
+pip install torchaudio
+
+pip install openai-whisper
+
+pip install numba
+
+pip install halo
+
+pip install easydict
+
+pip install soundcard
+
+pip install webrtcvad
+
+pip install threading
+
+pip install queue
+
+pip install collections
+
+...
+
+이외 필요한 패키지 install 해주시고 오류가 나면 uninstall 후 다시 install 해주세요.
+
+
 ## about test1
 ![image](https://github.com/nana-hyun/whisper_realtimecaption/assets/101063108/d0801e50-dc2e-4acc-b261-71d4fc7e3caa)
 
