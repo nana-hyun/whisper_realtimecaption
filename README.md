@@ -1,4 +1,4 @@
-# whisper_real time cation with chat_GPT
+# whisper_real time caption with chat_GPT
 2023 데이터분석경진대회 
 
 
