@@ -8,7 +8,7 @@ https://digging-on-bytes.com/whisper%EC%99%80-python%EC%9C%BC%EB%A1%9C-%EC%8B%A4
 
 추가할 함수는 다음과 같습니다.
 
-1. text를 메모로 저장
+1. text를 저장
 2. 저장한 text를 이용해 chat_gpt api를 활용, 더 나은 품질의 자막 제공
 3. 전체 저장한 text를 이용해 chat_gpt를 이용해 요약 정리
 
