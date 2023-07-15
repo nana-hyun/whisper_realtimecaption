@@ -19,24 +19,21 @@ from halo import Halo
 import webrtcvad
 
 
-
 mics = sc.all_microphones(include_loopback=True)
-# print(mics)
+for i, mic in enumerate(mics):
+    print(f"{i}: {mic.name}")
 
-for i in range(len(mics)):
-    try:
-        print(f"{i}: {mics[i].name}")
-    except Exception as e:
-        print(e)
+mic_index = int(input("디바이스 번호를 선택하세요: "))
+
 
 DEFAULT_SAMPLE_RATE = 16000
 
-# ARGS.device can be changed depending on your device
+
 
 ARGS = easydict.EasyDict({
         "webRTC_aggressiveness" : 3,
         "nospinner" : 'store_true',
-        "device" : 1,
+        "device" : mic_index,
         "silaro_model_name" : "silero_vad",
         "reload" : 'store_true',
         "trig_sum" :0.25,
@@ -46,6 +43,8 @@ ARGS = easydict.EasyDict({
         "min_speech_samples": 10000,
         "min_silence_samples": 500,
         "nopython":False,
+        "cuda":False,
+        "model":"base"
     })
 ARGS.rate = DEFAULT_SAMPLE_RATE 
 
@@ -181,17 +180,15 @@ vad_audio = VADAudio(aggressiveness=ARGS.webRTC_aggressiveness,
                      device=ARGS.device,
                      input_rate=ARGS.rate)
 
-print("Listening (ctrl-C to exit)...")
-print(vad_audio.vad_collector())
 frames = vad_audio.vad_collector()
-print("whisper model load ready")
+
 # load silero VAD
 model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
                               model=ARGS.silaro_model_name,
                               force_reload=ARGS.reload)
 (get_speech_ts, _, _, _, _) = utils
-print("whisper model load ready..")
-whisper_model = whisper.load_model("base")
+
+whisper_model = whisper.load_model(ARGS.model)
 print("Whisper model loaded")
 
  # Stream from microphone to DeepSpeech using VAD
@@ -201,24 +198,26 @@ if not ARGS.nospinner:
 
 
 wav_data = bytearray()
-for frame in frames:
+
+for i, frame in enumerate(frames):
+   
     if frame is not None:
         if spinner:
             spinner.start()
-
+        
         wav_data.extend(frame)
     else:
         if spinner:
             spinner.stop()
         # print("webRTC has detected a possible speech")
-
+        
         newsound = np.frombuffer(wav_data, np.int16)
         audio_float32 = Int2Float(newsound)
         time_stamps = get_speech_ts(
             audio_float32, model, sampling_rate=ARGS.rate)
-
+        # print("\n")
         if (len(time_stamps) > 0):
-            transcript = whisper_model.transcribe(audio=audio_float32)
+            transcript = whisper_model.transcribe(audio=audio_float32, fp16=ARGS.cuda)
             print(transcript['text'])
         else:
             pass
