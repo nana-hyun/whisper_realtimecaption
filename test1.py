@@ -17,39 +17,13 @@ import numpy as np
 import whisper
 from halo import Halo
 import webrtcvad
+import openai
 
 
-mics = sc.all_microphones(include_loopback=True)
-for i, mic in enumerate(mics):
-    print(f"{i}: {mic.name}")
-
-mic_index = int(input("디바이스 번호를 선택하세요: "))
-
-
-DEFAULT_SAMPLE_RATE = 16000
-
-
-
-ARGS = easydict.EasyDict({
-        "webRTC_aggressiveness" : 3,
-        "nospinner" : 'store_true',
-        "device" : mic_index,
-        "silaro_model_name" : "silero_vad",
-        "reload" : 'store_true',
-        "trig_sum" :0.25,
-        "neg_trig_sum" : 0.07,
-        "num_steps": 8,
-        "num_samples_per_window": 4000,
-        "min_speech_samples": 10000,
-        "min_silence_samples": 500,
-        "nopython":False,
-        "cuda":False,
-        "model":"base"
-    })
-ARGS.rate = DEFAULT_SAMPLE_RATE 
 
 SAMPLE_RATE = 16000
 
+openai.api_key = "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"
 
 class LoopbackAudio(threading.Thread):
     def __init__(self, callback, device, samplerate=SAMPLE_RATE):
@@ -173,56 +147,162 @@ def Int2Float(sound):
     if abs_max > 0:
         _sound *= 1/abs_max
     audio_float32 = torch.from_numpy(_sound.squeeze())
-    return audio_float32           
-
-# Start audio with VAD
-vad_audio = VADAudio(aggressiveness=ARGS.webRTC_aggressiveness,
-                     device=ARGS.device,
-                     input_rate=ARGS.rate)
-
-frames = vad_audio.vad_collector()
-
-# load silero VAD
-model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
-                              model=ARGS.silaro_model_name,
-                              force_reload=ARGS.reload)
-(get_speech_ts, _, _, _, _) = utils
-
-whisper_model = whisper.load_model(ARGS.model)
-print("Whisper model loaded")
-
- # Stream from microphone to DeepSpeech using VAD
-spinner = None
-if not ARGS.nospinner:
-    spinner = Halo(spinner='line')
+    return audio_float32
 
 
-wav_data = bytearray()
+def get_chatgpt_response(content):
+    prompt = f"""I will provide the text, so please summarize the contents in Korean in detail. Please summarize like markdown, with the topic and table of contents and with a detailed explanation.
+\n\n```{content}```"""
+    
+    print(f"Sending prompt to GPT-3:\n{prompt}\n")
+    
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a deep learning model for learning assistance and summarizing lecture."},
+            {"role": "user", "content": prompt},
+        ],
+        max_tokens=300,
+        n=1,
+        temperature=0,
+    )
 
-for i, frame in enumerate(frames):
-   
-    if frame is not None:
-        if spinner:
-            spinner.start()
+    answer = response.choices[0].message['content'].strip()
+    return answer
+
+
+def split_text(text, limit=1700):
+    if len(text) <= limit:
+        return [text]
+
+    chunks = []
+    while text:
+        chunk = text[:limit]
+        last_space_index = chunk.rfind(' ')
+
+        # 추가: last_space_index가 -1이면 텍스트를 그대로 분할합니다.
+        if last_space_index == -1:
+            last_space_index = limit
+
+        chunk = chunk[:last_space_index]
+        chunks.append(chunk)
+        text = text[last_space_index:].strip()
+
+    return chunks
+
+
+def process_text(text):
+    # 텍스트 분할
+    content_chunks = split_text(text)
+
+    answers = []
+    for chunk in content_chunks:
+        answer = get_chatgpt_response(chunk)
+        answers.append(answer)
+        print(f"Received response for chunk: {answer}")  # 응답을 출력합니다.
+
+    # 결과를 하나의 문자열로 결합
+    combined_answer = ' '.join(answers)
+    return combined_answer       
+
+
+      
+def main():
+    mics = sc.all_microphones(include_loopback=True)
+    for i, mic in enumerate(mics):
+        print(f"{i}: {mic.name}")
+
+    mic_index = int(input("디바이스 번호를 선택하세요: "))
+
+
+    DEFAULT_SAMPLE_RATE = 16000
+
+
+
+    ARGS = easydict.EasyDict({
+            "webRTC_aggressiveness" : 3,
+            "nospinner" : 'store_true',
+            "device" : mic_index,
+            "silaro_model_name" : "silero_vad",
+            "reload" : 'store_true',
+            "trig_sum" :0.25,
+            "neg_trig_sum" : 0.07,
+            "num_steps": 8,
+            "num_samples_per_window": 4000,
+            "min_speech_samples": 10000,
+            "min_silence_samples": 500,
+            "nopython":False,
+            "cuda":False,
+            "model":"base",
+            "file_path": "./transcribe.txt",
+        })
+    ARGS.rate = DEFAULT_SAMPLE_RATE 
+
+    # Start audio with VAD
+    vad_audio = VADAudio(aggressiveness=ARGS.webRTC_aggressiveness,
+                         device=ARGS.device,
+                         input_rate=ARGS.rate)
+    
+    frames = vad_audio.vad_collector()
+    
+    # load silero VAD
+    model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
+                                  model=ARGS.silaro_model_name,
+                                  force_reload=ARGS.reload)
+    (get_speech_ts, _, _, _, _) = utils
+    
+    whisper_model = whisper.load_model(ARGS.model)
+    print("Whisper model loaded")
+    
+     # Stream from microphone to DeepSpeech using VAD
+    spinner = None
+    if not ARGS.nospinner:
+        spinner = Halo(spinner='line')
+    
+    
+    wav_data = bytearray()
+    file = open(ARGS.file_path, "w")  # 파일을  열기
+    try:
+        for i, frame in enumerate(frames):
+           
+            if frame is not None:
+                if spinner:
+                    spinner.start()
+                
+                wav_data.extend(frame)
+            else:
+                if spinner:
+                    spinner.stop()
+                # print("webRTC has detected a possible speech")
+                
+                newsound = np.frombuffer(wav_data, np.int16)
+                audio_float32 = Int2Float(newsound)
+                time_stamps = get_speech_ts(
+                    audio_float32, model, sampling_rate=ARGS.rate)
+                # print("\n")
+                if (len(time_stamps) > 0):
+                    transcript = whisper_model.transcribe(audio=audio_float32, fp16=ARGS.cuda)
+                    print(transcript['text'])
+                    
+                    text = transcript['text']
+                    file.write(text + "\n")  # 텍스트를 파일에 저장
         
-        wav_data.extend(frame)
-    else:
-        if spinner:
-            spinner.stop()
-        # print("webRTC has detected a possible speech")
         
-        newsound = np.frombuffer(wav_data, np.int16)
-        audio_float32 = Int2Float(newsound)
-        time_stamps = get_speech_ts(
-            audio_float32, model, sampling_rate=ARGS.rate)
-        # print("\n")
-        if (len(time_stamps) > 0):
-            transcript = whisper_model.transcribe(audio=audio_float32, fp16=ARGS.cuda)
-            print(transcript['text'])
-        else:
-            pass
-        print()
+                else:
+                    pass
+                print()
+        
+                wav_data = bytearray()
+    except KeyboardInterrupt:
+        file.close()  # 파일 닫기
+        with open("./transcribe.txt",'r', encoding='utf-8') as file:
+            text = file.read()
+        print("요약을 진행합니다.\n")
+        process_text(text)
+        return 0
+    
+    
+    return 0
 
-        wav_data = bytearray()
-# Start audio with VAD
-
+if __name__ == "__main__":
+    main()
