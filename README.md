@@ -57,3 +57,37 @@ https://digging-on-bytes.com/whisper%EC%99%80-python%EC%9C%BC%EB%A1%9C-%EC%8B%A4
 2. 저장한 text를 이용해 chat_gpt api를 활용, 더 나은 품질의 자막 제공
 3. 전체 저장한 text를 이용해 chat_gpt를 이용해 요약 정리
 
+
+*query.py
+chat api를 활용하여 chat gpt한테 요약정리를 시키는 코드입니다.
+get_chatgpt_response는 chat api한테 prompt를 넘겨주는 함수입니다.
+split_text는 chat api 입력 토큰 길이 제한 때문에, 특정 길이로 잘라서 분할해주는 함수입니다.
+process_text는 텍스트를 분할하여 get_chatgpt_response를 적용하는 함수입니다.
+사용예시는 다음과 같습니다.
+```
+input_text = "텍스트 입력 예시"
+processed_text = process_text(input_text)
+```
+
+텍스트가 아니라 데이터프레임 값을 입력하고 싶다면 다음 코드를 사용하세요
+```
+from tqdm.auto import tqdm
+
+total_rows = df.shape[0]
+for index in tqdm(range(total_rows), desc="Processing rows"):
+    content = df.loc[index, 'content']
+
+    # 텍스트 분할
+    content_chunks = split_text(content)
+
+    answers = []
+    for chunk in content_chunks:
+        answer = get_chatgpt_response(chunk)
+        answers.append(answer)
+        print(f"Received response for chunk: {answer}")  # 응답을 출력합니다.
+
+    # 결과를 하나의 문자열로 결합
+    combined_answer = ' '.join(answers)
+    df.at[index, 'answer'] = combined_answer
+    print(f"Processed row {index + 1}/{total_rows}: {combined_answer}\n")
+```
