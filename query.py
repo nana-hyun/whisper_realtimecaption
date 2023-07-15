@@ -1,4 +1,4 @@
-openai.api_key = "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"
+openai.api_key = " "
 
 def get_chatgpt_response(content):
     prompt = f"""I will provide the text, so please summarize the contents in Korean in detail.
