@@ -59,6 +59,7 @@ https://digging-on-bytes.com/whisper%EC%99%80-python%EC%9C%BC%EB%A1%9C-%EC%8B%A4
 
 
 *query.py
+
 chat api를 활용하여 chat gpt한테 요약정리를 시키는 코드입니다.
 get_chatgpt_response는 chat api한테 prompt를 넘겨주는 함수입니다.
 split_text는 chat api 입력 토큰 길이 제한 때문에, 특정 길이로 잘라서 분할해주는 함수입니다.
