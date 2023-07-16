@@ -2,7 +2,7 @@
 """
 Created on Wed Jul 12 12:16:57 2023
 
-@author: Nahyun Kim
+@author: Nahyun
 """
 
 import soundcard as sc
@@ -25,7 +25,7 @@ warnings.filterwarnings("ignore")
 
 SAMPLE_RATE = 16000
 
-openai.api_key = " "
+openai.api_key = "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"
 
 class LoopbackAudio(threading.Thread):
     def __init__(self, callback, device, samplerate=SAMPLE_RATE):
@@ -243,8 +243,8 @@ def main():
             "nopython":False,
             "cuda":False,
             "model":"base",
-            "file_path": "./transcribe.txt",
-            "sum_path" : "./summary.txt",
+            "file_path": f"./transcribe_{title}.txt",
+            "sum_path" : f"./summary_{title}.txt",
         })
     ARGS.rate = DEFAULT_SAMPLE_RATE 
 
@@ -305,7 +305,7 @@ def main():
                 wav_data = bytearray()
     except KeyboardInterrupt:
         file.close()  # 파일 닫기
-        with open("./transcribe.txt",'r', encoding='cp949') as file:
+        with open(ARGS.file_path,'r', encoding='cp949') as file:
             text = file.read()
         print("요약을 진행합니다.\n")
         process_text(text,ARGS,title)
