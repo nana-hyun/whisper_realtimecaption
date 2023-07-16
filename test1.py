@@ -25,7 +25,7 @@ warnings.filterwarnings("ignore")
 
 SAMPLE_RATE = 16000
 
-openai.api_key = " "
+openai.api_key = " " # you must enter your own key
 
 class LoopbackAudio(threading.Thread):
     def __init__(self, callback, device, samplerate=SAMPLE_RATE):
