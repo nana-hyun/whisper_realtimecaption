@@ -23,7 +23,7 @@ import openai
 
 SAMPLE_RATE = 16000
 
-openai.api_key = "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"
+openai.api_key = " "
 
 class LoopbackAudio(threading.Thread):
     def __init__(self, callback, device, samplerate=SAMPLE_RATE):
