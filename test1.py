@@ -2,7 +2,7 @@
 """
 Created on Wed Jul 12 12:16:57 2023
 
-@author: Nahyun
+@author: Nahyun Kim
 """
 
 import soundcard as sc
@@ -152,8 +152,8 @@ def Int2Float(sound):
     return audio_float32
 
 
-def get_chatgpt_response(content):
-    prompt = f"""I will provide the text, so please summarize the contents in Korean in detail. Please summarize like markdown, with the topic and table of contents and with a detailed explanation.
+def get_chatgpt_response(content,title):
+    prompt = f"""I will provide the text about {title}, so please summarize the contents in Korean in detail. Please summarize like markdown, with the topic and table of contents and with a detailed explanation.
 \n\n```{content}```"""
     
     print(f"Sending prompt to GPT-3:\n{prompt}\n")
@@ -193,13 +193,13 @@ def split_text(text, limit=1700):
     return chunks
 
 
-def process_text(text,ARGS):
+def process_text(text,ARGS,title):
     # 텍스트 분할
     content_chunks = split_text(text)
 
     answers = []
     for chunk in content_chunks:
-        answer = get_chatgpt_response(chunk)
+        answer = get_chatgpt_response(chunk,title)
         answers.append(answer)
         print(f"Received response for chunk: {answer}")  # 응답을 출력합니다.
 
@@ -214,6 +214,9 @@ def process_text(text,ARGS):
 
       
 def main():
+    
+    title = str(input("주제를 입력해주세요: "))
+    
     mics = sc.all_microphones(include_loopback=True)
     for i, mic in enumerate(mics):
         print(f"{i}: {mic.name}")
@@ -238,8 +241,8 @@ def main():
             "min_speech_samples": 10000,
             "min_silence_samples": 500,
             "nopython":False,
-            "cuda":True,
-            "model":"medium",
+            "cuda":False,
+            "model":"base",
             "file_path": "./transcribe.txt",
             "sum_path" : "./summary.txt",
         })
@@ -305,7 +308,7 @@ def main():
         with open("./transcribe.txt",'r', encoding='cp949') as file:
             text = file.read()
         print("요약을 진행합니다.\n")
-        process_text(text,ARGS)
+        process_text(text,ARGS,title)
         return 0
     
     
