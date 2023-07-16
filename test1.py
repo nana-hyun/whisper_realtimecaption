@@ -18,7 +18,9 @@ import whisper
 from halo import Halo
 import webrtcvad
 import openai
+import warnings
 
+warnings.filterwarnings("ignore")
 
 
 SAMPLE_RATE = 16000
@@ -191,7 +193,7 @@ def split_text(text, limit=1700):
     return chunks
 
 
-def process_text(text):
+def process_text(text,ARGS):
     # 텍스트 분할
     content_chunks = split_text(text)
 
@@ -203,6 +205,10 @@ def process_text(text):
 
     # 결과를 하나의 문자열로 결합
     combined_answer = ' '.join(answers)
+    file = open(ARGS.sum_path, "w")  # 파일을  열기
+    file.write(combined_answer)  # 텍스트를 파일에 저장
+    file.close()  # 파일 닫기
+
     return combined_answer       
 
 
@@ -232,9 +238,10 @@ def main():
             "min_speech_samples": 10000,
             "min_silence_samples": 500,
             "nopython":False,
-            "cuda":False,
-            "model":"base",
+            "cuda":True,
+            "model":"medium",
             "file_path": "./transcribe.txt",
+            "sum_path" : "./summary.txt",
         })
     ARGS.rate = DEFAULT_SAMPLE_RATE 
 
@@ -295,10 +302,10 @@ def main():
                 wav_data = bytearray()
     except KeyboardInterrupt:
         file.close()  # 파일 닫기
-        with open("./transcribe.txt",'r', encoding='utf-8') as file:
+        with open("./transcribe.txt",'r', encoding='cp949') as file:
             text = file.read()
         print("요약을 진행합니다.\n")
-        process_text(text)
+        process_text(text,ARGS)
         return 0
     
     
