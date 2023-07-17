@@ -84,6 +84,7 @@ for index in tqdm(range(total_rows), desc="Processing rows"):
 ```
 
 
+아래는 chat api를 이용해 요약한 예시입니다. Markdown으로 요약해 notion, 깃허브 등 활용도가 높습니다.
 
  # 사양차락의 전통
 
