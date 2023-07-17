@@ -36,9 +36,6 @@ cmd창에서 실행
 >
 > python model.py
 
-![image](https://github.com/nana-hyun/whisper_realtimecaption/assets/101063108/8f8571d5-a453-4f03-b185-494c6e689e0c)
-
-
 
 ## about model.py
 ![image](https://github.com/nana-hyun/whisper_realtimecaption/assets/101063108/d0801e50-dc2e-4acc-b261-71d4fc7e3caa)
