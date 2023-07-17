@@ -20,12 +20,12 @@ import webrtcvad
 import openai
 import warnings
 
-warnings.filterwarnings("ignore")
+# warnings.filterwarnings("ignore")
 
 
 SAMPLE_RATE = 16000
 
-openai.api_key = " " # you must enter your own key
+openai.api_key = "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"
 
 class LoopbackAudio(threading.Thread):
     def __init__(self, callback, device, samplerate=SAMPLE_RATE):
@@ -225,7 +225,7 @@ def main():
 
 
     DEFAULT_SAMPLE_RATE = 16000
-
+    
 
 
     ARGS = easydict.EasyDict({
@@ -246,8 +246,9 @@ def main():
             "file_path": f"./transcribe_{title}.txt",
             "sum_path" : f"./summary_{title}.txt",
         })
+    
     ARGS.rate = DEFAULT_SAMPLE_RATE 
-
+    
     # Start audio with VAD
     vad_audio = VADAudio(aggressiveness=ARGS.webRTC_aggressiveness,
                          device=ARGS.device,
@@ -256,11 +257,12 @@ def main():
     frames = vad_audio.vad_collector()
     
     # load silero VAD
+   
     model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
                                   model=ARGS.silaro_model_name,
                                   force_reload=ARGS.reload)
     (get_speech_ts, _, _, _, _) = utils
-    
+    print("what")
     whisper_model = whisper.load_model(ARGS.model)
     print("Whisper model loaded")
     
@@ -271,7 +273,7 @@ def main():
     
     
     wav_data = bytearray()
-    file = open(ARGS.file_path, "w")  # 파일을  열기
+    file = open(ARGS.file_path, "w",encoding='utf-8',errors='ignore')  # 파일을  열기
     try:
         for i, frame in enumerate(frames):
            
@@ -305,11 +307,13 @@ def main():
                 wav_data = bytearray()
     except KeyboardInterrupt:
         file.close()  # 파일 닫기
-        with open(ARGS.file_path,'r', encoding='cp949') as file:
+        with open(ARGS.file_path,'r',encoding='utf-8',errors='ignore') as file:
             text = file.read()
         print("요약을 진행합니다.\n")
         process_text(text,ARGS,title)
         return 0
+    finally:
+        file.close() 
     
     
     return 0
