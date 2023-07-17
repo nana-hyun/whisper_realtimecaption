@@ -241,7 +241,7 @@ def main():
             "min_speech_samples": 10000,
             "min_silence_samples": 500,
             "nopython":False,
-            "cuda":False,
+            "cuda":torch.cuda.is_available(),
             "model":"base",
             "file_path": f"./transcribe_{title}.txt",
             "sum_path" : f"./summary_{title}.txt",
