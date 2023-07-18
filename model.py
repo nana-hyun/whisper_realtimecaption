@@ -262,7 +262,6 @@ def main():
                                   model=ARGS.silaro_model_name,
                                   force_reload=ARGS.reload)
     (get_speech_ts, _, _, _, _) = utils
-    print("what")
     whisper_model = whisper.load_model(ARGS.model)
     print("Whisper model loaded")
     
