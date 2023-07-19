@@ -20,7 +20,7 @@ import webrtcvad
 import openai
 import warnings
 
-# warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore")
 
 
 SAMPLE_RATE = 16000
@@ -161,7 +161,7 @@ def get_chatgpt_response(content,title):
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "system", "content": "You are a deep learning model for learning assistance and summarizing lecture."},
+            {"role": "system", "content": "Your are attending a lecture on {title}. You are a deep learning model for learning assistance and summarizing lecture."},
             {"role": "user", "content": prompt},
         ],
         max_tokens=300,
@@ -199,9 +199,11 @@ def process_text(text,ARGS,title):
 
     answers = []
     for chunk in content_chunks:
-        answer = get_chatgpt_response(chunk,title)
-        answers.append(answer)
-        print(f"Received response for chunk: {answer}")  # 응답을 출력합니다.
+        if len(chunk) > 17:
+        
+            answer = get_chatgpt_response(chunk,title)
+            answers.append(answer)
+            print(f"Received response for chunk: {answer}")  # 응답을 출력합니다.
 
     # 결과를 하나의 문자열로 결합
     combined_answer = ' '.join(answers)
@@ -209,7 +211,7 @@ def process_text(text,ARGS,title):
     file.write(combined_answer)  # 텍스트를 파일에 저장
     file.close()  # 파일 닫기
 
-    return combined_answer       
+    return combined_answer    
 
 
       
@@ -242,7 +244,7 @@ def main():
             "min_silence_samples": 500,
             "nopython":False,
             "cuda":torch.cuda.is_available(),
-            "model":"base",
+            "model":"medium",
             "file_path": f"./transcribe_{title}.txt",
             "sum_path" : f"./summary_{title}.txt",
         })
